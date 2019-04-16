@@ -4,7 +4,7 @@ int changeover;
 int[] currentState = new int[8];
 int[][] board = new int[9][8];
 
-
+//comment 
 void setup(){
     size(680, 480);
     for(int i = 0; i < 7; i++){
