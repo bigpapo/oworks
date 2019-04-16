@@ -1,7 +1,7 @@
 # oworks
 All orangeowkrs
 
-Current workings can be found in 'testing'
+Current workings can be found in 'testing2'
 
 you will need to install processing to work with this. Its a simple connect 4 game. 
 
