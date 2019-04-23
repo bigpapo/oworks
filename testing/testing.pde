@@ -4,208 +4,108 @@ import TUIO.*;
 // declare a TuioProcessing client
 TuioProcessing tuioClient;
 
-int trig;
-int turn;
-int changeover;
-int[] currentState = new int[8];
-int[][] board = new int[9][8];
-float currentXPosition = 0;
 int removeTrig = 0;
 int placeTrig = 0;
-int objectID = 5;
+int objectID = 0;
 
+int blueCount = 0; 
+int redCount = 0;
+int rows = 8 ;
+int cols = 3;
+int boardArray[][] = new int[cols][rows];
+int boardXPos = 0;
+int boardPos[] =  {0, 0, 0};
+int ID_1 = 5;
+int ID_2 = 2;
+int current = 0;
+int previous = 0;
+int start = 0;
+float currentXPosition = 0;
 
 float cursor_size = 15;
 float object_size = 60;
 float table_size = 760;
 float scale_factor = 1;
+
 PFont font;
-int count = 0;
+
 
 boolean verbose = false; // print console debug messages
 boolean callback = true; // updates only after callbacks
+boolean turn = true; 
 
 
 //comment 
-void setup(){
-    size(1200, 800);
-    for(int i = 0; i < 7; i++){
-     currentState[i] = 0; 
-    }
-    turn = 1;
-    
-    // periodic updates
+void setup() {
+  size(1200, 800);
+  // periodic updates
   if (!callback) {
     frameRate(60);
     loop();
   } else noLoop(); // or callback updates 
-  
+
   font = createFont("Arial", 18);
   scale_factor = height/table_size;
-  
   tuioClient  = new TuioProcessing(this);
 }
 
 void draw()
 {
+
   background(255);
-  textFont(font,18*scale_factor);
+  textFont(font, 18*scale_factor);
   float obj_size = object_size*scale_factor*.0001; 
-  float cur_size = cursor_size*scale_factor; 
-  
-  
-  /*
-  if(placeTrig == 1){
-    if (currentXPosition<400){
-      if(objectID ==0){
-        fill(200,0,0);
-        ellipse(1*50,1*50 , size, size);
-         }
-        else if (objectID ==2){
-          fill(0,0,200);
-          ellipse(1*50,1*50 , size, size);
-        }
-    }
-     else if ((currentXPosition>400)&&(currentXPosition<800)){
-       if(objectID ==0){
-        fill(200,0,0);
-        ellipse(2*50,1*50 , size, size);
-       }
-        else if (objectID ==2){
-          fill(0,0,200);
-          ellipse(2*50,1*50 , size, size);
-        }
-    }
-    else if ((currentXPosition>800)&&(currentXPosition<1200)){
-        if(objectID ==0){
-            fill(200,0,0);
-            ellipse(3*50,1*50 , size, size);
-           }
-            else if (objectID ==2){
-              fill(0,0,200);
-              ellipse(3*50,1*50 , size, size);
-            }
-    }
-    }
-  */
 
- 
-  if (placeTrig == 1 ){
-    placeTrig =0;
-    if (currentXPosition<400){
-          trig = 1;
-          currentState[1] += 1;
-          board[1][currentState[1]] = turn;
-          changeover = 1;
-          key = 'x';
-    }
-     else if ((currentXPosition>400)&&(currentXPosition<700)){
-          trig = 1;
-          currentState[2] += 1;
-          board[2][currentState[2]] = turn;
-          changeover = 1;
-          key = 'x';
-    }
-    else if ((currentXPosition>700)&&(currentXPosition<1200)){
-      trig = 1;
-      currentState[3] += 1;
-      board[3][currentState[3]] = turn;
-      changeover = 1;
-      key = 'x';
-    }
-  
-  } else{
-      trig = 0;
-        if (changeover ==1) {
-          turn *= -1;
-          changeover =0;
-      }
-    }
-  
-  
+
+
+  //creates a list of all the tuio objects in view
   ArrayList<TuioObject> tuioObjectList = tuioClient.getTuioObjectList();
-  for (int i=0;i<tuioObjectList.size();i++) {
-     TuioObject tobj = tuioObjectList.get(i);
-     stroke(0);
-     fill(0,0,0);
-     pushMatrix();
-     translate(tobj.getScreenX(width),tobj.getScreenY(height));
-     rotate(tobj.getAngle());
-     rect(-obj_size/2,-obj_size/2,obj_size,obj_size);
-     popMatrix();
-     fill(255);
-     text(""+tobj.getSymbolID(), tobj.getScreenX(width), tobj.getScreenY(height));
-     
-     currentXPosition = (tobj.getScreenX(width));
-     objectID = tobj.getSymbolID();
+  for (int i=0; i<tuioObjectList.size(); i++) {
+    TuioObject tobj = tuioObjectList.get(i);
+    stroke(0);
+    fill(0, 0, 0);
+    pushMatrix();
+    translate(tobj.getScreenX(width), tobj.getScreenY(height));
+    rotate(tobj.getAngle());
+    rect(-obj_size/2, -obj_size/2, obj_size, obj_size);
+    popMatrix();
+    fill(255);
+    text(""+tobj.getSymbolID(), tobj.getScreenX(width), tobj.getScreenY(height));
 
-   }
-   
-   ArrayList<TuioCursor> tuioCursorList = tuioClient.getTuioCursorList();
-   for (int i=0;i<tuioCursorList.size();i++) {
-      TuioCursor tcur = tuioCursorList.get(i);
-      ArrayList<TuioPoint> pointList = tcur.getPath();
-      
-      if (pointList.size()>0) {
-        stroke(0,0,255);
-        TuioPoint start_point = pointList.get(0);
-        for (int j=0;j<pointList.size();j++) {
-           TuioPoint end_point = pointList.get(j);
-           line(start_point.getScreenX(width),start_point.getScreenY(height),end_point.getScreenX(width),end_point.getScreenY(height));
-           start_point = end_point;
-        }
-        
-        stroke(192,192,192);
-        fill(192,192,192);
-        ellipse( tcur.getScreenX(width), tcur.getScreenY(height),cur_size,cur_size);
-        fill(0);
-        text(""+ tcur.getCursorID(),  tcur.getScreenX(width)-5,  tcur.getScreenY(height)+5);
-      }
-   }
-   
-  ArrayList<TuioBlob> tuioBlobList = tuioClient.getTuioBlobList();
-  for (int i=0;i<tuioBlobList.size();i++) {
-     TuioBlob tblb = tuioBlobList.get(i);
-     stroke(0);
-     fill(0);
-     pushMatrix();
-     translate(tblb.getScreenX(width),tblb.getScreenY(height));
-     rotate(tblb.getAngle());
-     ellipse(-1*tblb.getScreenWidth(width)/2,-1*tblb.getScreenHeight(height)/2, tblb.getScreenWidth(width), tblb.getScreenWidth(width));
-     popMatrix();
-     fill(255);
-     text(""+tblb.getBlobID(), tblb.getScreenX(width), tblb.getScreenX(width));
-   }
+    //gets current x possition of each object 
+    currentXPosition = (tobj.getScreenX(width));
+    objectID = tobj.getSymbolID();
+  }
+
+  //if an object is placed on the board a red or blue ball is drawn based on its last X location and its ID
+  if (placeTrig == 1) {
+    placeObject();
+  }
 
 
-drawAll();
-println(placeTrig);
-println(currentXPosition);
-}
+  //this continuously draws the state of the board based on the values in the 2D game array 
+  drawAll();
 
+  //if all three columns are full this resets the game arry and the board is redrawn 
+  if (((boardArray[0][7]!=0)&&(boardArray[1][7]!=0)&&(boardArray[2][7]!=0))) {
 
+    //delays for a second so players can see the board 
+    delay(1000);
 
-int x = 20;
-int y = 20;
-int size = 40;
-
-  
-void drawAll(){
-  for(int i = 0; i < 9; i++){
-    for(int j=0; j<8; j++){
-      if (board[i][j] == 1){
-        fill(255,0,0);
-        ellipse(i*50,j*50 , size, size);
-      }
-      else if (board[i][j] == -1){
-        fill(0,0,255);
-        ellipse(i*50,j*50 , size, size);
+    //fills the game array with zeros 
+    for (int i = 0; i < cols; i++) {
+      for (int j=0; j<rows; j++) {
+        boardArray[i][j] = 0;
       }
     }
   }
 }
-  
-  
+int size = 40;
+
+
+
+
+
 
 
 
@@ -217,14 +117,15 @@ void drawAll(){
 // called when an object is added to the scene
 void addTuioObject(TuioObject tobj) {
   placeTrig = 1;
+  removeTrig =0;
   if (verbose) println("add obj "+tobj.getSymbolID()+" ("+tobj.getSessionID()+") "+tobj.getX()+" "+tobj.getY()+" "+tobj.getAngle()+ placeTrig);
-  
+  println("object placed");
 }
 
 // called when an object is moved
 void updateTuioObject (TuioObject tobj) {
   if (verbose) println("set obj "+tobj.getSymbolID()+" ("+tobj.getSessionID()+") "+tobj.getX()+" "+tobj.getY()+" "+tobj.getAngle()
-          +" "+tobj.getMotionSpeed()+" "+tobj.getRotationSpeed()+" "+tobj.getMotionAccel()+" "+tobj.getRotationAccel());
+    +" "+tobj.getMotionSpeed()+" "+tobj.getRotationSpeed()+" "+tobj.getMotionAccel()+" "+tobj.getRotationAccel());
 }
 
 // called when an object is removed from the scene
@@ -232,7 +133,120 @@ void removeTuioObject(TuioObject tobj) {
   if (verbose) println("del obj "+tobj.getSymbolID()+" ("+tobj.getSessionID()+")");
   removeTrig = 1;
   placeTrig = 0;
+
+  println("object removed");
+  checkTurn();
+  updateBoard();
+  start = 1 ;
 }
+
+
+
+// --------------------------------------------------------------
+// called at the end of each TUIO frame
+void refresh(TuioTime frameTime) {
+  if (verbose) println("frame #"+frameTime.getFrameID()+" ("+frameTime.getTotalMilliseconds()+")");
+  if (callback) redraw();
+}
+
+//draw ball function 
+//use of this function means that x and y and colours can be changed and set easily without having to call 'fill' everytime an elipse is drawn 
+void drawBall(float currentXPosition, int y, int r, int g, int b) {
+  fill(r, g, b);
+  ellipse(currentXPosition, y, size, size);
+}
+
+//checks whoes turn it is, if its the first turn of the game start is set to true so the first move can take place
+//for any other turn it compares the current ID and the previous ID and if they are the same turn is set to false and the turn witll not be taken 
+void checkTurn() {
+
+  if (start == 0) { 
+    turn = true;
+    previous = objectID;
+  } else {
+    current = objectID;
+
+    if (current == previous) {
+      turn = false;
+    } else {
+      turn = true;
+    }
+  }
+  println("turn: ", turn);
+  println("previous: ", previous);
+  println("current: ", current);
+}
+
+//if an object is placed and its the players turn this function places a ball in the relevent place 
+//checks for ID first then where the ball is placed, a 1 or 2 is placed in the relevent place in the 2D array 
+void updateBoard() {
+
+  if (objectID == ID_1 && turn) {
+    for (int i = 0; i < cols; i++) {
+      if (boardXPos == i && (boardArray[i][7] == 0)) {
+        boardPos[i]++;
+        boardArray[i][boardPos[i]] = 1;
+      }
+    }
+  } else if (objectID == ID_2 && turn) {
+    for (int i = 0; i < cols; i++) {
+      if (boardXPos == i && (boardArray[i][7] == 0)) {
+        boardPos[i]++;
+        boardArray[i][boardPos[i]] = 2;
+      }
+    }
+  }
+}
+
+
+//using the values in the boardArray this function contiously draws the board 
+//the numbers in here are hardcoded based on the current board in use but will need to be updated and refined for the full board 
+void drawAll() {
+  for (int i = 0; i < cols; i++) {
+    for (int j=0; j<rows; j++) {
+      if (boardArray[i][j] == 1) {
+        drawBall(200+i*200, (600-j*50), 100, 0, 0);
+      } else if (boardArray[i][j] == 2) {
+        drawBall(200+i*200, (600-j*50), 0, 0, 100);
+      }
+    }
+  }
+}
+
+//function to draw inital placement of an object/ball on screen 
+//x values are relevent to the current board but the threshold can also be drastically reduced 
+void placeObject() {
+  //y position is set as a constant for all placements 
+  int yPos = 200;
+
+  if (objectID == ID_1) {
+    if ((currentXPosition>200)&&(currentXPosition<400)) {
+      drawBall(600, yPos, 100, 0, 0);
+      boardXPos = 2;
+    } else if ((currentXPosition>400)&&(currentXPosition<700)) {
+      drawBall(400, yPos, 100, 0, 0);
+      boardXPos = 1;
+    } else if ((currentXPosition>720)) {
+      drawBall(200, yPos, 100, 0, 0);
+      boardXPos = 0;
+    }
+  }
+
+  if (objectID ==ID_2) {
+    if ((currentXPosition>200)&&(currentXPosition<400)) {
+      drawBall(600, yPos, 0, 0, 100);
+      boardXPos = 2;
+    } else if ((currentXPosition>400)&&(currentXPosition<700)) {
+      drawBall(400, yPos, 0, 0, 100);
+      boardXPos = 1;
+    } else if ((currentXPosition>720)) {
+      drawBall(200, yPos, 00, 0, 100);
+      boardXPos = 0;
+    }
+  }
+}
+
+
 
 // --------------------------------------------------------------
 // called when a cursor is added to the scene
@@ -244,7 +258,7 @@ void addTuioCursor(TuioCursor tcur) {
 // called when a cursor is moved
 void updateTuioCursor (TuioCursor tcur) {
   if (verbose) println("set cur "+tcur.getCursorID()+" ("+tcur.getSessionID()+ ") " +tcur.getX()+" "+tcur.getY()
-          +" "+tcur.getMotionSpeed()+" "+tcur.getMotionAccel());
+    +" "+tcur.getMotionSpeed()+" "+tcur.getMotionAccel());
   //redraw();
 }
 
@@ -259,26 +273,17 @@ void removeTuioCursor(TuioCursor tcur) {
 void addTuioBlob(TuioBlob tblb) {
   if (verbose) println("add blb "+tblb.getBlobID()+" ("+tblb.getSessionID()+") "+tblb.getX()+" "+tblb.getY()+" "+tblb.getAngle()+" "+tblb.getWidth()+" "+tblb.getHeight()+" "+tblb.getArea());
   //redraw();
-  removeTrig = 3;
 }
 
 // called when a blob is moved
 void updateTuioBlob (TuioBlob tblb) {
   if (verbose) println("set blb "+tblb.getBlobID()+" ("+tblb.getSessionID()+") "+tblb.getX()+" "+tblb.getY()+" "+tblb.getAngle()+" "+tblb.getWidth()+" "+tblb.getHeight()+" "+tblb.getArea()
-          +" "+tblb.getMotionSpeed()+" "+tblb.getRotationSpeed()+" "+tblb.getMotionAccel()+" "+tblb.getRotationAccel());
+    +" "+tblb.getMotionSpeed()+" "+tblb.getRotationSpeed()+" "+tblb.getMotionAccel()+" "+tblb.getRotationAccel());
   //redraw()
 }
 
 // called when a blob is removed from the scene
 void removeTuioBlob(TuioBlob tblb) {
-  removeTrig = 1;
-  if (verbose) println("del blb "+tblb.getBlobID()+" ("+tblb.getSessionID()+")"+removeTrig);
+  if (verbose) println("del blb "+tblb.getBlobID()+" ("+tblb.getSessionID()+")");
   //redraw()
-}
-
-// --------------------------------------------------------------
-// called at the end of each TUIO frame
-void refresh(TuioTime frameTime) {
-  if (verbose) println("frame #"+frameTime.getFrameID()+" ("+frameTime.getTotalMilliseconds()+")");
-  if (callback) redraw();
 }
